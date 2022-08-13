@@ -2,6 +2,7 @@ import { Component } from 'react';
 import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
 import Spinner from '../spinner/spinner';
+import ErrorMessage from '../errorMessage/ErrorMessage';
 import MarvelService from '../../services/MarvelService';
 
 class RandomChar  extends Component {
@@ -14,7 +15,8 @@ class RandomChar  extends Component {
 
     state = {
         char: {},
-        loading: true
+        loading: true,
+        error: false
     }
 
     marvelService = new MarvelService();
@@ -24,7 +26,16 @@ class RandomChar  extends Component {
         //{char} == {char: char}
         this.setState({
             char, 
-            loading: false
+            loading: false,
+            error: false
+        })
+    }
+
+    //Обработаем ошибки
+    onError = () => {
+        this.setState({
+            loading: false,
+            error: true
         })
     }
 
@@ -34,15 +45,23 @@ class RandomChar  extends Component {
             .getCharacter(id)
             //если в then просто передается функция, то значение пришедшее в then передастся в функцию 
             .then(this.onCharLoaded)
+            .catch(this.onError);
     }
 
     render() {
-        const {char, loading} = this.state;
+        const {char, loading, error} = this.state;
+        //вынесем логику отображения компонентов вверх
+        const errorMessage = error ? <ErrorMessage/> : null;
+        const spinner = loading ? <Spinner/> : null;
+        const content = !(loading || error) ? <View char={char}/> : null;
 
         return (
             <div className="randomchar">
                 {/* * условный рендеринг */}
-                {loading ? <Spinner/> : <View char={char}/>}
+                {/* если придет null  */}
+                {errorMessage}
+                {spinner}
+                {content}
                 <div className="randomchar__static">
                     <p className="randomchar__title">
                         Random character for today!<br/>
