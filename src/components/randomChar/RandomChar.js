@@ -6,9 +6,6 @@ import ErrorMessage from '../errorMessage/ErrorMessage';
 import MarvelService from '../../services/MarvelService';
 
 class RandomChar  extends Component {
-    constructor(props) {
-        super(props);
-    }
 
     state = {
         char: {},
@@ -20,11 +17,11 @@ class RandomChar  extends Component {
 
     componentDidMount() {
         this.updadeChar();
-        this.timerId = setInterval(this.updadeChar, 3000);
+        //this.timerId = setInterval(this.updadeChar, 3000);
     }
 
     componentWillUnmount() {
-        clearInterval(this.timerId);
+       //clearInterval(this.timerId);
     }
 
 
@@ -77,7 +74,7 @@ class RandomChar  extends Component {
                     <p className="randomchar__title">
                         Or choose another one
                     </p>
-                    <button className="button button__main">
+                    <button onClick={this.updadeChar} className="button button__main">
                         <div className="inner">try it</div>
                     </button>
                     <img src={mjolnir} alt="mjolnir" className="randomchar__decoration"/>
@@ -90,10 +87,9 @@ class RandomChar  extends Component {
 //Отделим логический блок, для условного рендеринга компонента *(см выше)
 const View = ({char}) => {
     const {name, description, thumbnail, homepage, wiki} = char
-
     return (
         <div className="randomchar__block">
-            <img src={thumbnail} alt="Random character" className="randomchar__img"/>
+            <img src={thumbnail} alt="Random character" className="randomchar__img" style={~thumbnail.indexOf('image_not_available') ? {objectFit: "contain"} : null}/>
             <div className="randomchar__info">
                 <p className="randomchar__name">{name}</p>
                 <p className="randomchar__descr">
