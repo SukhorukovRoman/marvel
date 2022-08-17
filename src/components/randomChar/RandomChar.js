@@ -35,6 +35,12 @@ class RandomChar  extends Component {
         })
     }
 
+    onCharLoading = () => {
+        this.setState({
+            loading: true,
+        })
+    }
+
     //Обработаем ошибки
     onError = () => {
         this.setState({
@@ -45,6 +51,7 @@ class RandomChar  extends Component {
 
     updadeChar = () => {
         const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
+        this.onCharLoading();
         this.marvelService
             .getCharacter(id)
             //если в then просто передается функция, то значение пришедшее в then передастся в функцию 
