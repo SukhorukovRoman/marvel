@@ -8,9 +8,6 @@ import MarvelService from '../../services/MarvelService';
 class RandomChar  extends Component {
     constructor(props) {
         super(props);
-        //вызываем метод при констурировании(создании) объекта
-        //!!!!! но это плохая практика т.к. мы вызывает setState на компоненте который еще не появился на странице
-        this.updadeChar();
     }
 
     state = {
@@ -20,6 +17,16 @@ class RandomChar  extends Component {
     }
 
     marvelService = new MarvelService();
+
+    componentDidMount() {
+        this.updadeChar();
+        this.timerId = setInterval(this.updadeChar, 3000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerId);
+    }
+
 
     //Создадим метод записывающий персонажа
     onCharLoaded = (char) => {
