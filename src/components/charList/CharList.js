@@ -51,7 +51,7 @@ class CharList extends Component {
         const resultChars = charList.map(char => {
             const {thumbnail, name} = char;
             return (
-                <li className="char__item" key={char.id}>
+                <li className="char__item" key={char.id} onClick={() => this.props.onCharSelected(char.id)}>
                     <img src={thumbnail} alt="abyss" style={~thumbnail.indexOf('image_not_available') ? {objectFit: "contain"} : null}/>
                     <div className="char__name">{name}</div>
                 </li>
