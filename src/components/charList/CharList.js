@@ -13,21 +13,54 @@ class CharList extends Component {
     state = {
         charList: [],
         loading: true,
-        error: false
+        error: false,
+        //загрузка новых элементов (персонажей)
+        newItemLoading: false,
+        //добавим базовый отступ от начала для загрузки персонажей
+        //отдельный, чтобы не загрезнять класс
+        offset: 210,
+        //Добавим св-во для обработки случая, когда персонажи больше не приходят (список закончился)
+        charEnded: false
     }
 
     marvelService = new MarvelService();
 
     componentDidMount() {
-        this.getCharList();
+        this.onRequest();
     }
 
-    onCharlistLoaded = (charList) => {
+    onRequest = (offset) => {
+        this.onCharListLoading();
+        this.marvelService.getAllCharacters(offset)
+            .then(this.onCharlistLoaded)
+            .catch(this.onError)
+    }
+
+    onCharListLoading = () => {
         this.setState({
-            charList,
-            loading: false,
-            error: false
+            newItemLoading: true
         })
+    }
+
+    onCharlistLoaded = (newCharList) => {
+        //Добавим проверку на то, что при запросе приходят всё те-же 9 персонажей
+        //проверка на но то, что список не закончился
+        let ended = false;
+        if (newCharList.length < 9) {
+            ended = true;
+        }
+
+        //т.к. мы будем добавлять персонажей к уже существующему массиву, нам нужен предыдущий state
+        //для этого переделае в функцию
+        this.setState(({offset, charList}) => ({
+            //к предыдущим элементам добавим новые
+            charList: [...charList, ...newCharList],
+            loading: false,
+            error: false,
+            newItemLoading: false,
+            offset: offset + 9,
+            charEnded: ended
+        }))
     }
 
     onError = () => {
@@ -35,13 +68,6 @@ class CharList extends Component {
             loading: false,
             error: true
         })
-    }
-
-    getCharList = () => {
-        this.marvelService
-            .getAllCharacters()
-            .then(this.onCharlistLoaded)
-            .catch(this.onError)
     }
 
 
@@ -66,7 +92,7 @@ class CharList extends Component {
     }
 
     render() {
-        const {charList, loading, error} = this.state
+        const {charList, loading, error, newItemLoading, offset, charEnded} = this.state
         const charElements = this.renderCharItem(charList);
         const spinner = loading ? <Spinner/> : null;
         const errorMessage = error ? <ErrorMessage/> : null;
@@ -77,7 +103,11 @@ class CharList extends Component {
                 {errorMessage}
                 {spinner}
                 {content}
-                <button className="button button__main button__long">
+                <button 
+                    className="button button__main button__long"
+                    disabled={newItemLoading}
+                    style={{'display': charEnded ? 'none' : 'block'}}
+                    onClick={() => this.onRequest(offset)}>
                     <div className="inner">load more</div>
                 </button>
             </div>
