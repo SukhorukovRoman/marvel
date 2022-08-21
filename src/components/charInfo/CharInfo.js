@@ -1,4 +1,5 @@
 import { Component } from 'react/cjs/react.production.min';
+import PropTypes from 'prop-types';
 import './charInfo.scss';
 import Spinner from '../spinner/spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
@@ -127,6 +128,12 @@ const View = ({char}) => {
             </ul>
         </>
     )
+}
+
+
+CharInfo.propTypes = {
+    //название приходящего св-ва: валидация типа
+    charId: PropTypes.number
 }
 
 export default CharInfo;
