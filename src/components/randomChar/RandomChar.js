@@ -1,94 +1,83 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
 import Spinner from '../spinner/spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import MarvelService from '../../services/MarvelService';
 
-class RandomChar  extends Component {
+const RandomChar = () => {
 
-    state = {
-        char: {},
-        loading: true,
-        error: false
-    }
+    const [char, setChar] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
-    marvelService = new MarvelService();
+   const  marvelService = new MarvelService();
 
-    componentDidMount() {
-        this.updadeChar();
-        //this.timerId = setInterval(this.updadeChar, 3000);
-    }
-
-    componentWillUnmount() {
-       //clearInterval(this.timerId);
-    }
+    useEffect(() => {
+        updadeChar();
+        // const timerId = setInterval(updadeChar, 3000);
+        // //аналог componentWillUnmount
+        // return () => {
+        //     clearInterval(timerId);
+        // }
+    }, []);
 
 
     //Создадим метод записывающий персонажа
-    onCharLoaded = (char) => {
+    const onCharLoaded = (char) => {
         //{char} == {char: char}
-        this.setState({
-            char, 
-            loading: false,
-            error: false
-        })
+        setChar(char);
+        setLoading(false);
+        setError(false);
     }
 
-    onCharLoading = () => {
-        this.setState({
-            loading: true,
-        })
+    const onCharLoading = () => {
+        setLoading(true);
     }
 
     //Обработаем ошибки
-    onError = () => {
-        this.setState({
-            loading: false,
-            error: true
-        })
+    const onError = () => {
+        setLoading(false);
+        setError(true);
     }
 
-    updadeChar = () => {
+    const updadeChar = () => {
         const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
-        this.onCharLoading();
-        this.marvelService
+        onCharLoading();
+        marvelService
             .getCharacter(id)
             //если в then просто передается функция, то значение пришедшее в then передастся в функцию 
-            .then(this.onCharLoaded)
-            .catch(this.onError);
+            .then(onCharLoaded)
+            .catch(onError);
     }
 
-    render() {
-        const {char, loading, error} = this.state;
-        //вынесем логику отображения компонентов вверх
-        const errorMessage = error ? <ErrorMessage/> : null;
-        const spinner = loading ? <Spinner/> : null;
-        const content = !(loading || error) ? <View char={char}/> : null;
+    //вынесем логику отображения компонентов вверх
+    const errorMessage = error ? <ErrorMessage/> : null;
+    const spinner = loading ? <Spinner/> : null;
+    const content = !(loading || error) ? <View char={char}/> : null;
 
-        return (
-            <div className="randomchar">
-                {/* * условный рендеринг */}
-                {/* если придет null  */}
-                {errorMessage}
-                {spinner}
-                {content}
-                <div className="randomchar__static">
-                    <p className="randomchar__title">
-                        Random character for today!<br/>
-                        Do you want to get to know him better?
-                    </p>
-                    <p className="randomchar__title">
-                        Or choose another one
-                    </p>
-                    <button onClick={this.updadeChar} className="button button__main">
-                        <div className="inner">try it</div>
-                    </button>
-                    <img src={mjolnir} alt="mjolnir" className="randomchar__decoration"/>
-                </div>
+    return (
+        <div className="randomchar">
+            {/* * условный рендеринг */}
+            {/* если придет null  */}
+            {errorMessage}
+            {spinner}
+            {content}
+            <div className="randomchar__static">
+                <p className="randomchar__title">
+                    Random character for today!<br/>
+                    Do you want to get to know him better?
+                </p>
+                <p className="randomchar__title">
+                    Or choose another one
+                </p>
+                <button onClick={updadeChar} className="button button__main">
+                    <div className="inner">try it</div>
+                </button>
+                <img src={mjolnir} alt="mjolnir" className="randomchar__decoration"/>
             </div>
-        )
-    }
+        </div>
+    )
 }
 
 //Отделим логический блок, для условного рендеринга компонента *(см выше)
