@@ -3,15 +3,12 @@ import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
 import Spinner from '../spinner/spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 
 const RandomChar = () => {
 
     const [char, setChar] = useState({});
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
-
-   const  marvelService = new MarvelService();
+    const {loading, error, getCharacter, clearError} = useMarvelService();
 
     useEffect(() => {
         updadeChar();
@@ -27,28 +24,16 @@ const RandomChar = () => {
     const onCharLoaded = (char) => {
         //{char} == {char: char}
         setChar(char);
-        setLoading(false);
-        setError(false);
-    }
-
-    const onCharLoading = () => {
-        setLoading(true);
-    }
-
-    //Обработаем ошибки
-    const onError = () => {
-        setLoading(false);
-        setError(true);
     }
 
     const updadeChar = () => {
+        //удаляем ошибку при новом запросе
+        //иначе ошибка мешала бы вывести нового персонажа
+        clearError();
         const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
-        onCharLoading();
-        marvelService
-            .getCharacter(id)
+        getCharacter(id)
             //если в then просто передается функция, то значение пришедшее в then передастся в функцию 
-            .then(onCharLoaded)
-            .catch(onError);
+            .then(onCharLoaded);
     }
 
     //вынесем логику отображения компонентов вверх
@@ -85,7 +70,7 @@ const View = ({char}) => {
     const {name, description, thumbnail, homepage, wiki} = char
     return (
         <div className="randomchar__block">
-            <img src={thumbnail} alt="Random character" className="randomchar__img" style={~thumbnail.indexOf('image_not_available') ? {objectFit: "contain"} : null}/>
+            <img src={thumbnail} alt="Random character" className="randomchar__img" style={~thumbnail?.indexOf('image_not_available') ? {objectFit: "contain"} : null}/>
             <div className="randomchar__info">
                 <p className="randomchar__name">{name}</p>
                 <p className="randomchar__descr">

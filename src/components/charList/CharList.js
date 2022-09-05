@@ -3,13 +3,11 @@ import PropTypes from 'prop-types';
 import './charList.scss';
 import Spinner from '../spinner/spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 
 const CharList = (props) => {
 
     const [charList, setCharList] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
     //загрузка новых элементов (персонажей)
     const [newItemLoading, setNewItemLoading] = useState(false);
     //добавим базовый отступ от начала для загрузки персонажей
@@ -18,26 +16,25 @@ const CharList = (props) => {
     //Добавим св-во для обработки случая, когда персонажи больше не приходят (список закончился)
     const [charEnded, setCharEnded] = useState(false);
 
-    const marvelService = new MarvelService();
+    const {loading, error, getAllCharacters} = useMarvelService();
 
     //для симуляции componentDidMount используем useEffect
     //с пустым массивом зависимостей
     useEffect(() => {
         //т.к. useEffect вызовется после рендера, 
         //мы можем вызывать в нем функции до их объявления
-        onRequest();
+        onRequest(offset, true);
     }, [])
 
-    const onRequest = (offset) => {
-        onCharListLoading();
-        marvelService.getAllCharacters(offset)
+    const onRequest = (offset, initial) => {
+        //т.к. у нас теперь loading всегда в true
+        //будем передавать параметр нужна она или нет
+        //иначе при дозагрузке персонажей, предыдущие меняются на loading
+        initial ? setNewItemLoading(false) : setNewItemLoading(true);
+        getAllCharacters(offset)
             .then(onCharlistLoaded)
-            .catch(onError)
     }
 
-    const onCharListLoading = () => {
-        setNewItemLoading(true);
-    }
 
     const onCharlistLoaded = (newCharList) => {
         //Добавим проверку на то, что при запросе приходят всё те-же 9 персонажей
@@ -50,15 +47,9 @@ const CharList = (props) => {
         //т.к. мы будем добавлять персонажей к уже существующему массиву, нам нужен предыдущий state
         //для этого переделае в функцию
         setCharList(charList => [...charList, ...newCharList]);
-        setLoading(false);
         setNewItemLoading(false);
         setOffset(offset => offset + 9);
         setCharEnded(ended);
-    }
-
-    const onError = () => {
-        setLoading(false);
-        setError(true);
     }
 
     const itemRefs = useRef([]);
@@ -105,15 +96,17 @@ const CharList = (props) => {
 
    // const {charList, loading, error, newItemLoading, offset, charEnded} = this.state
     const charElements = renderCharItem(charList);
-    const spinner = loading ? <Spinner/> : null;
+
+    const spinner = loading && !newItemLoading ? <Spinner/> : null;
     const errorMessage = error ? <ErrorMessage/> : null;
-    const content = !(loading || error) ? charElements : null;
 
     return (
         <div className="char__list">
             {errorMessage}
             {spinner}
-            {content}
+            {/* т.к. в функциональном компоненте идет постоянная перерисовка,  content постоянно пересоздавался
+            в результате чего, он пропадал при дозагрузке, теперь мы будем всегда помещать элементы, даже если их нет*/}
+            {charElements}
             <button 
                 className="button button__main button__long"
                 disabled={newItemLoading}

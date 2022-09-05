@@ -1,30 +1,23 @@
+import {useHttp} from '../hooks/http.hook'
 //Создадим обычный js класс
-class MarvelService {
-    _apiBase = 'https://gateway.marvel.com:443/v1/public/';
-    _apiKey = 'apikey=062633041e17e1c2507b4d50287307de';
-    _baseOffset = 210;
+const useMarvelService = () => {
+    const {loading, request, error, clearError} = useHttp();
 
-    getResource = async (url) => {
-        let response = await fetch(url);
+    const _apiBase = 'https://gateway.marvel.com:443/v1/public/';
+    const _apiKey = 'apikey=062633041e17e1c2507b4d50287307de';
+    const _baseOffset = 210;
 
-        if (!response.ok) {
-            throw new Error(`Could not fetch ${url}, status: ${response.status}`);
-        }
-    
-        return await response.json();
+    const getAllCharacters = async (offset = _baseOffset) => {
+        const result = await request(`${_apiBase}characters?limit=9&offset=${offset}&${_apiKey}`);
+        return result.data.results.map(_transformCharacter)
     }
 
-    getAllCharacters = async (offset = this._baseOffset) => {
-        const result = await this.getResource(`${this._apiBase}characters?limit=9&offset=${offset}&${this._apiKey}`);
-        return result.data.results.map(this._transformCharacter)
+    const getCharacter = async (id) => {
+        const result = await request(`${_apiBase}characters/${id}?${_apiKey}`);
+        return _transformCharacter(result.data.results[0])
     }
 
-    getCharacter = async (id) => {
-        const result = await this.getResource(`${this._apiBase}characters/${id}?${this._apiKey}`);
-        return this._transformCharacter(result.data.results[0])
-    }
-
-    _transformCharacter = (character) => {
+    const _transformCharacter = (character) => {
         return {
             id: character.id,
             name: character.name,
@@ -35,6 +28,8 @@ class MarvelService {
             comics: character.comics.items
         }
     }
+
+    return {loading, error, getAllCharacters, getCharacter, clearError}
 }
 
-export default MarvelService;
+export default useMarvelService;
