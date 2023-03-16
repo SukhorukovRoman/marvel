@@ -1,39 +1,37 @@
-import { useState } from "react";
-import AppHeader from "../appHeader/AppHeader";
-import RandomChar from "../randomChar/RandomChar";
-import CharList from "../charList/CharList";
-import CharInfo from "../charInfo/CharInfo";
-import ErrorBoundary from "../errorBoundary/ErrorBoundary";
+import {lazy, Suspense} from "react";
+//Компонент Router оборачивает все ссылки и страницы (т.е. маршруты) по которым переходит пользователь
+import { BrowserRouter as Router, Route, Routes} from "react-router-dom";
 
-import decoration from '../../resources/img/vision.png';
+import AppHeader from "../appHeader/AppHeader";
+//Динамические импорты вставляем после статических, иначе может быть ошибка
+const Page404 = lazy(() => import("../pages/404"));
+const MainPage = lazy(() => import("../pages/MainPage"));
+const ComicsPage = lazy(() => import("../pages/ComicsPage"));
+const SingleComicLayout = lazy(() => import('../pages/singleComicLayout/SingleComicLayout'));
+const SingleCharacterLayout = lazy(() => import('../pages/singleCharacterLayout/SingleCharacterLayout'));
+const SinglePage = lazy(() => import('../pages/SinglePage'));
 
 const App = () => {
-
-    const [selectedChar, setChar] = useState(null);
-
-
-    const onCharSelected = (id) => {
-        setChar(id);
-    }
-
     return (
-        <div className="app">
-            <AppHeader/>
-            <main>
-                <ErrorBoundary>
-                    <RandomChar/>
-                </ErrorBoundary>
-                <div className="char__content">
-                    <ErrorBoundary>
-                        <CharList onCharSelected={onCharSelected}/>
-                    </ErrorBoundary>
-                    <ErrorBoundary>
-                        <CharInfo charId={selectedChar}/>
-                    </ErrorBoundary>
-                </div>
-                <img className="bg-decoration" src={decoration} alt="vision"/>
-            </main>
-        </div>
+        //Помещаем всю структуру в Router
+        <Router>
+            <div className="app">
+                <AppHeader/>
+                <main>
+                    {/*fallback - запасной компонент который можно показать пока грузится импорт*/}
+                    <Suspense fallback={<span>Loading...</span>}>
+                        <Routes>
+                            <Route path="/" element={<MainPage/>}/>
+                            <Route path="/comics" element={<ComicsPage/>}/>
+                            {/*comicId - уникальный идентификатор который придумываем сами*/}
+                            <Route path="/comics/:id" element={<SinglePage Component={SingleComicLayout} dataType='comic'/>}/>
+                            <Route path="/characters/:id" element={<SinglePage Component={SingleCharacterLayout} dataType='character'/>}/>
+                            <Route path="*" element={<Page404/>}/>
+                        </Routes>
+                    </Suspense>
+                </main>
+            </div>
+        </Router>
     )
 }
 
