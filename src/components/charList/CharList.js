@@ -1,10 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import {CSSTransition, TransitionGroup} from "react-transition-group";
+
+import useMarvelService from '../../services/MarvelService';
 import './charList.scss';
 import Spinner from '../spinner/spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import useMarvelService from '../../services/MarvelService';
-import {CSSTransition, TransitionGroup} from "react-transition-group";
+
+const setContent = (process, Component, newItemLoading) => {
+    switch (process) {
+        case 'waiting':
+            //у нас нет ожидания, поэтому заменим на спинер
+            return <Spinner/>
+        case 'loading':
+            //загрузка показывается только при первом запросе, далее отображается компонент
+            return newItemLoading ? <Component/> : <Spinner/>;
+        case 'error':
+            return <ErrorMessage/>
+        case 'confirmed':
+            return <Component/>
+        default:
+            throw new Error('Unexpected process state');
+    }
+};
 
 const CharList = (props) => {
 
@@ -17,7 +35,7 @@ const CharList = (props) => {
     //Добавим св-во для обработки случая, когда персонажи больше не приходят (список закончился)
     const [charEnded, setCharEnded] = useState(false);
 
-    const {loading, error, getAllCharacters} = useMarvelService();
+    const {getAllCharacters, process, setProcess} = useMarvelService();
 
     //для симуляции componentDidMount используем useEffect
     //с пустым массивом зависимостей
@@ -34,6 +52,7 @@ const CharList = (props) => {
         initial ? setNewItemLoading(false) : setNewItemLoading(true);
         getAllCharacters(offset)
             .then(onCharlistLoaded)
+            .then(() => setProcess('confirmed'))
     }
 
 
@@ -103,19 +122,9 @@ const CharList = (props) => {
         )
     }
 
-   // const {charList, loading, error, newItemLoading, offset, charEnded} = this.state
-    const charElements = renderCharItem(charList);
-
-    const spinner = loading && !newItemLoading ? <Spinner/> : null;
-    const errorMessage = error ? <ErrorMessage/> : null;
-
     return (
         <div className="char__list">
-            {errorMessage}
-            {spinner}
-            {/* т.к. в функциональном компоненте идет постоянная перерисовка,  content постоянно пересоздавался
-            в результате чего, он пропадал при дозагрузке, теперь мы будем всегда помещать элементы, даже если их нет*/}
-            {charElements}
+            {setContent(process, () => renderCharItem(charList), newItemLoading)}
             <button 
                 className="button button__main button__long"
                 disabled={newItemLoading}

@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import './charInfo.scss';
-import Spinner from '../spinner/spinner';
-import ErrorMessage from '../errorMessage/ErrorMessage';
-import Skeleton from '../skeleton/Skeleton';
 import useMarvelService from '../../services/MarvelService';
+import setContent from "../../utils/setContent";
 
 
 const CharInfo = (props) => {
-
     const [char, setChar] = useState(null);
-
-    const {loading, error, getCharacter, clearError} = useMarvelService();
+    const {process, setProcess, getCharacter, clearError} = useMarvelService();
 
     useEffect(() => {
         updateChar();
@@ -26,6 +22,9 @@ const CharInfo = (props) => {
         clearError();
         getCharacter(charId)
             .then(onCharLoaded)
+            //Вызываем когда данные сформированы
+            //когда данные загружены и переданы в текущий state
+            .then(() => setProcess('confirmed'))
     }
 
     //Создадим метод записывающий персонажа
@@ -34,25 +33,17 @@ const CharInfo = (props) => {
         setChar(char);
     }
 
-    const skeleton = char || loading || error ? null : <Skeleton/>;
-    const spinner = loading ? <Spinner/> : null;
-    const errorMessage = error ? <ErrorMessage/> : null;
-    const content = !(loading || error || !char) ? <View char={char}/> : null;
     return (
         <div className="char__info">
-            {/* из-за условий отобразится только один элемент, остальные т.к. null не отобразятся */}
-            {skeleton}
-            {spinner}
-            {errorMessage}
-            {content}
+            {setContent(process, View, char)}
         </div>
     )
     
 }
 
 //Отделим статичный элемент отображения от компонента с логикой
-const View = ({char}) => {
-    const {name, description, thumbnail, homepage, wiki, comics} = char;
+const View = ({data}) => {
+    const {name, description, thumbnail, homepage, wiki, comics} = data;
     return (
         <>
             <div className="char__basics">
