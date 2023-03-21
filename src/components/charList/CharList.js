@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import {useState, useEffect, useRef, useMemo} from 'react';
 import PropTypes from 'prop-types';
 import {CSSTransition, TransitionGroup} from "react-transition-group";
 
@@ -75,7 +75,7 @@ const CharList = (props) => {
     const itemRefs = useRef([]);
 
     const focusOnItem = (id) => {
-        itemRefs.current.forEach(item => item.classList.remove('char__item_selected'));
+        itemRefs.current.forEach(item => item?.classList.remove('char__item_selected'));
         itemRefs.current[id].classList.add('char__item_selected');
         itemRefs.current[id].focus();
     }
@@ -122,9 +122,15 @@ const CharList = (props) => {
         )
     }
 
+    //т.к. при клике идет вызов onCharSelected и повторная перерисовка, фокус устанавливается на элемент и затем элементы перерисовываются
+    //запомним значение через useMemo во избежание лишней перерисовки
+    const elements = useMemo(() => {
+        return setContent(process, () => renderCharItem(charList), newItemLoading)
+    }, [process])
+
     return (
         <div className="char__list">
-            {setContent(process, () => renderCharItem(charList), newItemLoading)}
+            {elements}
             <button 
                 className="button button__main button__long"
                 disabled={newItemLoading}
